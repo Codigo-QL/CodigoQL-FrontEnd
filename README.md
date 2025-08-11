@@ -19,7 +19,7 @@ Este projeto é o FrontEnd da plataforma "Código-QL" e utiliza **Vite**, **Reac
 
 Para rodar em ambiente de desenvolvimento:
 ```bash
-npm run dev
+npm run start
 ```
 
 O Vite iniciará o servidor em:
