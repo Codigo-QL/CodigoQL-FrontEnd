@@ -9,8 +9,18 @@ const system = createSystem(defaultConfig, {
         primaryText: { value: "#F0F0F0" },
         secondaryBackground: { value: "#62A6F5" },
       },
+      fonts: {
+        body: { value: "'Oswald', sans-serif" },
+        heading: { value: "'Oswald', sans-serif" },
+        mono: { value: "monospace" }
+      }
     },
   },
+  globalCss: {
+    body: {
+      bg: "background",
+    },
+  }
 })
 
 export default system
