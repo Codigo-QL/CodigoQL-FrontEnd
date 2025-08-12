@@ -1,7 +1,98 @@
-import { Box, Flex, Icon, Tabs, Text } from '@chakra-ui/react'
+import { Alert, Box, Flex, Icon, Image, Spinner, Tabs, Text } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
+import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import api from '../services/api';
+
+interface NivelData {
+  id: number;
+  narrativa: string;
+  enunciado: string;
+  dica: string;
+  capitulo: {
+    codigo: string;
+    titulo: string;
+  };
+  personagem: {
+    nome: string;
+    imagem: { [key: string]: number } | null;
+  };
+}
 
 export default function Nivel() {
+  const { id } = useParams<{ id: string }>();
+  const [nivel, setNivel] = useState<NivelData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const imageUrl = useMemo(() => {
+    if (nivel?.personagem?.imagem) {
+      const imageData = Object.values(nivel.personagem.imagem);
+
+      if (imageData.length > 0) {
+        let binaryString = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < imageData.length; i += chunkSize) {
+          const chunk = imageData.slice(i, i + chunkSize);
+          binaryString += String.fromCharCode.apply(null, chunk);
+        }
+
+        const base64String = btoa(binaryString);
+        return `data:image/png;base64,${base64String}`;
+      }
+    }
+    return '';
+  }, [nivel]);
+
+  useEffect(() => {
+    if (id) {
+      api.get(`/niveis/${id}`)
+        .then(response => {
+          setNivel(response.data);
+        })
+        .catch(err => {
+          console.error("Erro ao buscar nível:", err);
+          setError("Não foi possível carregar os dados do nível.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Flex justify="center" align="center" height="100%">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert.Root margin="0px" status="error" variant="solid">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>Ocorreu um Erro!</Alert.Title>
+          <Alert.Description>{error}</Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+    );
+  }
+
+  if (!nivel) {
+    return (
+      <Alert.Root margin="0px" status="warning" variant="solid">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>Aviso</Alert.Title>
+          <Alert.Description>Nível não encontrado.</Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+    );
+  }
+
   return (
     <Box
       height="100%"
@@ -28,8 +119,8 @@ export default function Nivel() {
         </Box>
 
         <Flex direction="column" align="center">
-          <Text fontSize={{ base: "16px", md: "28px" }} fontWeight="semibold">Capítulo C1 - Boas Vindas à UCC</Text>
-          <Text fontSize={{ base: "14px", md: "16px" }} fontWeight="regular">Nível 1</Text>
+          <Text fontSize={{ base: "16px", md: "28px" }} fontWeight="semibold">{nivel.capitulo.codigo} - {nivel.capitulo.titulo}</Text>
+          <Text fontSize={{ base: "14px", md: "16px" }} fontWeight="regular">Nível {nivel.id}</Text>
         </Flex>
       </Flex>
 
@@ -104,7 +195,15 @@ export default function Nivel() {
                   backgroundColor="primaryButton"
                   height={{ base: "128px", md: "200px" }}
                 >
-
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={`Imagem de ${nivel.personagem.nome}`}
+                      maxH="100%"
+                      maxW="100%"
+                      objectFit="cover"
+                    />
+                  ) : null}
                 </Flex>
                 <Flex
                   height={{ base: "26px", md: "35px" }}
@@ -117,30 +216,30 @@ export default function Nivel() {
                   alignItems="center"
                   justifyContent="center"
                 >
-                  Desconhecido
+                  {nivel.personagem.nome}
                 </Flex>
               </Box>
 
               <Text
-                fontSize={{base: "12px", md: "20px"}}
+                fontSize={{ base: "12px", md: "20px" }}
                 color="primaryButton"
                 flex="1"
                 textAlign="justify"
                 padding="4px"
               >
-                Recupere todos os dados da testemunha chamada Roberto, que possui o RG 12.345.678-9, na tabela pessoa. Se precisar de ajuda, consulte a aba “Dica” para mais informações.
+                {nivel.enunciado}
               </Text>
             </Flex>
             <Tabs.Content
               value="caso"
-              padding="0px"
+              padding="4px"
               flex="1"
               minH={0}
               overflowY="auto"
             >
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lacinia mattis dolor sit amet blandit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. In interdum elit nec nisi blandit, quis convallis risus pulvinar. Maecenas semper lectus sed venenatis consectetur. Nam facilisis elementum vehicula. Vivamus et gravida mauris. Mauris a leo accumsan, dictum libero eget, faucibus justo. Nulla elementum dui et felis euismod, a vehicula arcu ullamcorper. Fusce molestie condimentum sollicitudin. Quisque augue tellus, porta non lectus sed, pretium sagittis augue. Cras suscipit nunc augue. Etiam condimentum enim ut dolor finibus, vel dapibus dui cursus. Aliquam sit amet velit metus. Suspendisse viverra ligula eu rhoncus vestibulum.
-
-              Pellentesque non aliquam velit. Sed ullamcorper, metus vitae pulvinar efficitur, magna augue ultrices lacus, at vulputate lorem quam quis sem. Nulla tristique rutrum dui. Aliquam pellentesque suscipit dapibus. Aenean eu rhoncus ipsum. Sed eget purus vitae eros tincidunt tempor nec a ex. Curabitur sed blandit metus. Nulla eget feugiat felis. Morbi nec pretium tellus. Etiam ultrices porta velit, vitae feugiat neque ullamcorper vitae. Aliquam erat volutpat. Suspendisse potenti.
+              <ReactMarkdown>
+                {nivel.narrativa}
+              </ReactMarkdown>
             </Tabs.Content>
             <Tabs.Content value="dica">
               Manage your projects
