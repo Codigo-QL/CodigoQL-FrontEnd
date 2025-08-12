@@ -46,7 +46,7 @@ export default function Nivel() {
           variant="outline"
           justify="end"
           width="100%"
-          height={{base: "55%", md: "100%"}}
+          height={{ base: "55%", md: "100%" }}
           display="flex"
           flexDirection="column"
         >
@@ -90,34 +90,47 @@ export default function Nivel() {
             borderWidth="4px"
             borderColor="primaryButton"
             flex="1"
-            minH={0} 
+            minH={0}
             display="flex"
             flexDirection="column"
           >
-            <Box
-              width={{base: "132px", md: "204px"}}
-              height={{base: "154px", md: "235px"}}
-            >
-              <Flex
-                backgroundColor="primaryButton"
-                height={{base: "128px", md: "200px"}}
+            <Flex>
+              <Box
+                flexShrink={0}
+                width={{ base: "132px", md: "204px" }}
+                height={{ base: "154px", md: "235px" }}
               >
+                <Flex
+                  backgroundColor="primaryButton"
+                  height={{ base: "128px", md: "200px" }}
+                >
 
-              </Flex>
-              <Flex
-                height={{base: "26px", md: "35px"}}
-                backgroundColor="secondaryBackground"
-                borderRadius="0px 0px 4px 0px"
+                </Flex>
+                <Flex
+                  height={{ base: "26px", md: "35px" }}
+                  backgroundColor="secondaryBackground"
+                  borderRadius="0px 0px 4px 0px"
+                  fontSize={{ base: "12px", md: "20px" }}
+                  fontWeight="bold"
+                  color="primaryText"
+                  textAlign="center"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  Desconhecido
+                </Flex>
+              </Box>
+
+              <Text
                 fontSize={{base: "12px", md: "20px"}}
-                fontWeight="bold"
-                color="primaryText"
-                textAlign="center"
-                alignItems="center"
-                justifyContent="center"
+                color="primaryButton"
+                flex="1"
+                textAlign="justify"
+                padding="4px"
               >
-                Desconhecido
-              </Flex>
-            </Box>
+                Recupere todos os dados da testemunha chamada Roberto, que possui o RG 12.345.678-9, na tabela pessoa. Se precisar de ajuda, consulte a aba “Dica” para mais informações.
+              </Text>
+            </Flex>
             <Tabs.Content
               value="caso"
               padding="0px"
