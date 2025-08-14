@@ -1,4 +1,4 @@
-import { Alert, Box, Flex, Icon, Image, Spinner, Tabs, Text } from '@chakra-ui/react'
+import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Tabs, Text } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
 import { useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
@@ -25,6 +25,38 @@ export default function Nivel() {
   const [nivel, setNivel] = useState<NivelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const markdownComponents = {
+    p: (props: any) => <Text mb="4" {...props} />,
+    code({ node, inline, className, children, ...props }: any) {
+      if (!inline) {
+        return (
+          <CodeBlock.Root code={String(children).replace(/\n$/, '')} language='sql'>
+            <CodeBlock.Content>
+              <Float placement="top-end" offset="5" zIndex="1">
+                <CodeBlock.CopyTrigger asChild>
+                  <IconButton variant="ghost" size="2xs">
+                    <CodeBlock.CopyIndicator />
+                  </IconButton>
+                </CodeBlock.CopyTrigger>
+              </Float>
+              <CodeBlock.Code>
+                <pre style={{ padding: '1rem', margin: 0 }}>
+                  <code {...props}>{children}</code>
+                </pre>
+              </CodeBlock.Code>
+            </CodeBlock.Content>
+          </CodeBlock.Root>
+        );
+      }
+
+      return (
+        <Code fontSize="sm" className={className} {...props}>
+          {children}
+        </Code>
+      );
+    },
+  };
 
   const imageUrl = useMemo(() => {
     if (nivel?.personagem?.imagem) {
@@ -237,12 +269,20 @@ export default function Nivel() {
               minH={0}
               overflowY="auto"
             >
-              <ReactMarkdown>
+              <ReactMarkdown components={markdownComponents}>
                 {nivel.narrativa}
               </ReactMarkdown>
             </Tabs.Content>
-            <Tabs.Content value="dica">
-              Manage your projects
+            <Tabs.Content
+              value="dica"
+              padding="4px"
+              flex="1"
+              minH={0}
+              overflowY="auto"
+            >
+              <ReactMarkdown components={markdownComponents}>
+                {nivel.dica}
+              </ReactMarkdown>
             </Tabs.Content>
           </Box>
         </Tabs.Root>
