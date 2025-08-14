@@ -20,6 +20,25 @@ const system = createSystem(defaultConfig, {
     body: {
       bg: "background",
     },
+    "::-webkit-scrollbar": {
+      width: "8px",
+      height: "8px",
+    },
+    "::-webkit-scrollbar-track": {
+      background: "transparent",
+    },
+    "::-webkit-scrollbar-thumb": {
+      background: "#050F1A",
+      borderRadius: "6px",
+      border: "2px solid transparent",
+      backgroundClip: "content-box",
+    },
+    "::-webkit-scrollbar-thumb:hover": {
+      background: "#62A6F5",
+      borderRadius: "6px",
+      border: "2px solid transparent",
+      backgroundClip: "content-box",
+    },
   }
 })
 
