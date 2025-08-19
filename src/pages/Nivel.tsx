@@ -1,9 +1,16 @@
-import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Tabs, Text } from '@chakra-ui/react'
+import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
 import { useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import api from '../services/api';
+import Editor from 'react-simple-code-editor';
+import hljs from 'highlight.js/lib/core';
+import sql from 'highlight.js/lib/languages/sql';
+import 'highlight.js/styles/github-dark.css';
+
+
+hljs.registerLanguage('sql', sql);
 
 interface NivelData {
   id: number;
@@ -25,28 +32,44 @@ export default function Nivel() {
   const [nivel, setNivel] = useState<NivelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [code, setCode] = useState<string>('SELECT * FROM tabela;');
+
+  const highlightJsAdapter = createHighlightJsAdapter<typeof hljs>({
+    async load() {
+      const languages = {
+        sql: () => import("highlight.js/lib/languages/sql"),
+      }
+      await Promise.all(
+        Object.entries(languages).map(async ([language, file]) => {
+          const { default: langModule } = await file()
+          hljs.registerLanguage(language, langModule)
+        }),
+      )
+      return hljs
+    },
+  });
 
   const markdownComponents = {
     p: (props: any) => <Text mb="4" {...props} />,
     code({ node, inline, className, children, ...props }: any) {
       if (!inline) {
         return (
-          <CodeBlock.Root code={String(children).replace(/\n$/, '')} language='sql'>
-            <CodeBlock.Content>
-              <Float placement="top-end" offset="5" zIndex="1">
-                <CodeBlock.CopyTrigger asChild>
-                  <IconButton variant="ghost" size="2xs">
-                    <CodeBlock.CopyIndicator />
-                  </IconButton>
-                </CodeBlock.CopyTrigger>
-              </Float>
-              <CodeBlock.Code>
-                <pre style={{ padding: '1rem', margin: 0 }}>
-                  <code {...props}>{children}</code>
-                </pre>
-              </CodeBlock.Code>
-            </CodeBlock.Content>
-          </CodeBlock.Root>
+          <CodeBlock.AdapterProvider value={highlightJsAdapter}>
+            <CodeBlock.Root code={String(children).replace(/\n$/, '')} language='sql'>
+              <CodeBlock.Content>
+                <Float placement="top-end" offset="5" zIndex="1">
+                  <CodeBlock.CopyTrigger asChild>
+                    <IconButton variant="ghost" size="2xs">
+                      <CodeBlock.CopyIndicator />
+                    </IconButton>
+                  </CodeBlock.CopyTrigger>
+                </Float>
+                <CodeBlock.Code>
+                  <CodeBlock.CodeText />
+                </CodeBlock.Code>
+              </CodeBlock.Content>
+            </CodeBlock.Root>
+          </CodeBlock.AdapterProvider>
         );
       }
 
@@ -342,9 +365,21 @@ export default function Nivel() {
               borderWidth="4px"
               borderColor="primaryButton"
               height="100%"
+              overflowY="auto"
             >
-              <Tabs.Content value="sql" height="100%">
-                Manage your team members
+              <Tabs.Content padding={0} value="sql" height="100%">
+                <Editor
+                  value={code}
+                  onValueChange={code => setCode(code)}
+                  highlight={code => hljs.highlight(code, { language: 'sql' }).value}
+                  padding={10}
+                  style={{
+                    fontFamily: '"Fira code", "Fira Mono", monospace',
+                    fontSize: 16,
+                    height: '100%',
+                  }}
+                  className="hljs"
+                />
               </Tabs.Content>
               <Tabs.Content value="resultado" height="100%">
                 Manage your projects
