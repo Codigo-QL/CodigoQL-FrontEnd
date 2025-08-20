@@ -471,7 +471,7 @@ export default function Nivel() {
                           <Table.Header>
                             <Table.Row bg="secondaryBackground">
                               {result.columns.map((columnName) => (
-                                <Table.ColumnHeader key={columnName} color="primaryText">
+                                <Table.ColumnHeader key={columnName} color="primaryText" textAlign="center">
                                   {columnName}
                                 </Table.ColumnHeader>
                               ))}
@@ -481,7 +481,7 @@ export default function Nivel() {
                             {result.values.map((row, rowIndex) => (
                               <Table.Row key={rowIndex}>
                                 {row.map((cell, cellIndex) => (
-                                  <Table.Cell key={cellIndex}>{cell}</Table.Cell>
+                                  <Table.Cell key={cellIndex} textAlign="center">{cell}</Table.Cell>
                                 ))}
                               </Table.Row>
                             ))}
