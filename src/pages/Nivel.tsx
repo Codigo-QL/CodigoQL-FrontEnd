@@ -1,9 +1,13 @@
-import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Tabs, Text } from '@chakra-ui/react'
+import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
 import { useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import api from '../services/api';
+import Editor from 'react-simple-code-editor';
+import hljs, { ensureSqlLanguageIsRegistered } from '../services/highlight';
+import 'highlight.js/styles/github-dark.css';
+import initSqlJs, { type Database } from 'sql.js';
 
 interface NivelData {
   id: number;
@@ -18,19 +22,28 @@ interface NivelData {
     nome: string;
     imagem: { [key: string]: number } | null;
   };
+  codigo_base: string;
 }
 
-export default function Nivel() {
-  const { id } = useParams<{ id: string }>();
-  const [nivel, setNivel] = useState<NivelData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type QueryResult = {
+  columns: string[];
+  values: any[][];
+};
 
-  const markdownComponents = {
-    p: (props: any) => <Text mb="4" {...props} />,
-    code({ node, inline, className, children, ...props }: any) {
-      if (!inline) {
-        return (
+const highlightJsAdapter = createHighlightJsAdapter({
+  load: async () => {
+    ensureSqlLanguageIsRegistered();
+    return hljs;
+  },
+});
+
+
+const markdownComponents = {
+  p: (props: any) => <Text mb="4" {...props} />,
+  code({ node, inline, className, children, ...props }: any) {
+    if (!inline) {
+      return (
+        <CodeBlock.AdapterProvider value={highlightJsAdapter}>
           <CodeBlock.Root code={String(children).replace(/\n$/, '')} language='sql'>
             <CodeBlock.Content>
               <Float placement="top-end" offset="5" zIndex="1">
@@ -41,22 +54,34 @@ export default function Nivel() {
                 </CodeBlock.CopyTrigger>
               </Float>
               <CodeBlock.Code>
-                <pre style={{ padding: '1rem', margin: 0 }}>
-                  <code {...props}>{children}</code>
-                </pre>
+                <CodeBlock.CodeText />
               </CodeBlock.Code>
             </CodeBlock.Content>
           </CodeBlock.Root>
-        );
-      }
-
-      return (
-        <Code fontSize="sm" className={className} {...props}>
-          {children}
-        </Code>
+        </CodeBlock.AdapterProvider>
       );
-    },
-  };
+    }
+
+    return (
+      <Code fontSize="sm" className={className} {...props}>
+        {children}
+      </Code>
+    );
+  },
+};
+
+export default function Nivel() {
+  const { id } = useParams<{ id: string }>();
+  const [nivel, setNivel] = useState<NivelData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [code, setCode] = useState<string>('SELECT * FROM pessoa;');
+  const [db, setDb] = useState<Database | null>(null);
+  const [isDbLoading, setIsDbLoading] = useState<boolean>(true);
+  const [dbError, setDbError] = useState<string | null>(null);
+  const [queryResult, setQueryResult] = useState<QueryResult[] | null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [activeQueryTab, setActiveQueryTab] = useState('sql');
 
   const imageUrl = useMemo(() => {
     if (nivel?.personagem?.imagem) {
@@ -77,6 +102,30 @@ export default function Nivel() {
     return '';
   }, [nivel]);
 
+  const handleTestQuery = () => {
+    if (!db) {
+      setQueryError("O banco de dados ainda não foi carregado.");
+      return;
+    }
+
+    try {
+      setQueryError(null);
+
+      const results = db.exec(code);
+      console.log("Resultado da Query:", results);
+
+      setQueryResult(results);
+
+    } catch (err: any) {
+      console.error("Erro ao executar a query:", err.message);
+
+      setQueryResult(null);
+      setQueryError(err.message);
+    } finally {
+      setActiveQueryTab('resultado');
+    }
+  };
+
   useEffect(() => {
     if (id) {
       api.get(`/niveis/${id}`)
@@ -92,6 +141,36 @@ export default function Nivel() {
         });
     }
   }, [id]);
+
+  useEffect(() => {
+    if (nivel?.codigo_base) {
+      const loadDatabase = async () => {
+        setIsDbLoading(true);
+        setDbError(null);
+        try {
+          const response = await api.get(`/niveis/database/${nivel.codigo_base}`, {
+            responseType: 'arraybuffer',
+          });
+
+          const SQL = await initSqlJs({
+            locateFile: file => `/${file}`
+          });
+
+          setDb(new SQL.Database(new Uint8Array(response.data)));
+
+        } catch (err) {
+          console.error("Erro ao carregar o banco de dados:", err);
+          setDbError("Não foi possível configurar o banco de dados para este nível.");
+        } finally {
+          setIsDbLoading(false);
+        }
+      };
+
+      loadDatabase();
+    } else if (nivel) {
+      setIsDbLoading(false);
+    }
+  }, [nivel]);
 
   if (loading) {
     return (
@@ -289,12 +368,13 @@ export default function Nivel() {
 
         <Flex
           width="100%"
-          height="100%"
+          height={{ base: "40%", md: "100%" }}
+          gap="16px"
           flexDirection="column"
-          justifyContent="space-between"
         >
           <Tabs.Root
-            defaultValue="sql"
+            value={activeQueryTab}
+            onValueChange={(details) => setActiveQueryTab(details.value)}
             variant="outline"
             justify="end"
             width="100%"
@@ -341,13 +421,82 @@ export default function Nivel() {
             <Box
               borderWidth="4px"
               borderColor="primaryButton"
-              height="100%"
+              overflowY="auto"
+              flex="1"
+              minH={0}
+              display="flex"
+              flexDirection="column"
             >
-              <Tabs.Content value="sql" height="100%">
-                Manage your team members
+              <Tabs.Content padding={0} value="sql" height="100%">
+
+                {isDbLoading ? (
+                  <Flex direction="column" align="center" justify="center" height="100%">
+                    <Spinner size="xl" />
+                    <Text mt={4}>Configurando banco de dados...</Text>
+                  </Flex>
+                ) : dbError ? (
+                  <Text p={4} color="red.500">{dbError}</Text>
+                ) : (
+                  <Editor
+                    value={code}
+                    onValueChange={code => setCode(code)}
+                    highlight={(code) => {
+                      ensureSqlLanguageIsRegistered();
+                      return hljs.highlight(code, { language: 'sql' }).value;
+                    }}
+                    padding={10}
+                    style={{
+                      fontFamily: '"Fira code", "Fira Mono", monospace',
+                      fontSize: 16,
+                      height: '100%',
+                    }}
+                    className="hljs"
+                  />
+                )}
               </Tabs.Content>
-              <Tabs.Content value="resultado" height="100%">
-                Manage your projects
+              <Tabs.Content value="resultado" height="100%" p={4} overflowY="auto">
+                {queryError && (
+                  <Alert.Root status='error' variant="solid" borderRadius="md">
+                    <Alert.Indicator />
+                    <Alert.Title>Erro na Query!</Alert.Title>
+                    <Alert.Description>{queryError}</Alert.Description>
+                  </Alert.Root>
+                )}
+
+                {!queryError && queryResult && (
+                  queryResult.map((result, index) => (
+                    <Box key={index} mb={6}>
+                      {result.values.length > 0 ? (
+                        <Table.Root>
+                          <Table.Header>
+                            <Table.Row bg="secondaryBackground">
+                              {result.columns.map((columnName) => (
+                                <Table.ColumnHeader key={columnName} color="primaryText" textAlign="center">
+                                  {columnName}
+                                </Table.ColumnHeader>
+                              ))}
+                            </Table.Row>
+                          </Table.Header>
+                          <Table.Body>
+                            {result.values.map((row, rowIndex) => (
+                              <Table.Row key={rowIndex}>
+                                {row.map((cell, cellIndex) => (
+                                  <Table.Cell key={cellIndex} textAlign="center">{cell}</Table.Cell>
+                                ))}
+                              </Table.Row>
+                            ))}
+                          </Table.Body>
+                        </Table.Root>
+                      ) : (
+                        <Text>A query foi executada com sucesso, mas não retornou resultados.</Text>
+                      )}
+                    </Box>
+                  ))
+                )}
+
+                {!queryError && !queryResult && (
+                  <Text>O resultado da sua query aparecerá aqui.</Text>
+                )}
               </Tabs.Content>
             </Box>
           </Tabs.Root>
@@ -378,6 +527,7 @@ export default function Nivel() {
                 color="primaryText"
                 fontSize={{ base: "14px", md: "32px" }}
                 fontWeight="bold"
+                onClick={handleTestQuery}
               >
                 Testar
               </Text>
