@@ -1,13 +1,14 @@
-import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
+import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Field, Flex, Float, Icon, IconButton, Image, Input, Portal, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import initSqlJs, { type Database } from 'sql.js';
+import { v4 as uuidv4 } from 'uuid';
 import api from '../services/api';
+import ReactMarkdown from 'react-markdown';
 import Editor from 'react-simple-code-editor';
 import hljs, { ensureSqlLanguageIsRegistered } from '../services/highlight';
 import 'highlight.js/styles/github-dark.css';
-import initSqlJs, { type Database } from 'sql.js';
 
 interface NivelData {
   id: number;
@@ -23,6 +24,7 @@ interface NivelData {
     imagem: { [key: string]: number } | null;
   };
   codigo_base: string;
+  hasNextLevel: boolean;
 }
 
 type QueryResult = {
@@ -72,6 +74,8 @@ const markdownComponents = {
 
 export default function Nivel() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const [nivel, setNivel] = useState<NivelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +86,11 @@ export default function Nivel() {
   const [queryResult, setQueryResult] = useState<QueryResult[] | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [activeQueryTab, setActiveQueryTab] = useState('sql');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
+  const [isMatriculaDialogOpen, setMatriculaDialogOpen] = useState(false);
+  const [matriculaInput, setMatriculaInput] = useState('');
+  const [isMatriculaInvalid, setIsMatriculaInvalid] = useState(false);
 
   const imageUrl = useMemo(() => {
     if (nivel?.personagem?.imagem) {
@@ -125,6 +134,78 @@ export default function Nivel() {
     }
   };
 
+  const sendValidationRequest = async () => {
+    if (!id) return;
+    setIsSubmitting(true);
+    setValidationResult(null);
+
+    let sessaoId = localStorage.getItem('sessao_id');
+    if (!sessaoId) {
+      sessaoId = uuidv4();
+      localStorage.setItem('sessao_id', sessaoId);
+    }
+
+    const matricula = localStorage.getItem('matricula');
+
+    try {
+      const response = await api.post(`/niveis/validate/${id}`, {
+        userQuery: code,
+        sessao_id: sessaoId,
+        matricula: matricula
+      });
+      setValidationResult(response.data);
+
+      if (response.data.correct) {
+        const completedLevelsRaw = localStorage.getItem('completedLevels');
+        const completedLevels = completedLevelsRaw ? JSON.parse(completedLevelsRaw) : [];
+
+        const currentLevelId = Number(id);
+        if (!completedLevels.includes(currentLevelId)) {
+          completedLevels.push(currentLevelId);
+        }
+
+        localStorage.setItem('completedLevels', JSON.stringify(completedLevels));
+      }
+    } catch (err) {
+      console.error("Erro ao enviar a resposta:", err);
+      setValidationResult({
+        correct: false,
+        feedback: "Não foi possível validar sua resposta. Tente novamente mais tarde.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleQuerySubmit = () => {
+    const matricula = localStorage.getItem('matricula');
+    if (!matricula) {
+      setMatriculaDialogOpen(true);
+    } else {
+      sendValidationRequest();
+    }
+  };
+
+  const handleMatriculaDialogSubmit = (stayAnonymous: boolean) => {
+    if (!stayAnonymous && matriculaInput) {
+      localStorage.setItem('matricula', matriculaInput);
+    } else {
+      localStorage.setItem('matricula', 'anonimo');
+    }
+    setMatriculaDialogOpen(false);
+    sendValidationRequest();
+  };
+
+  const handleMatriculaInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value)) {
+      setMatriculaInput(value);
+      setIsMatriculaInvalid(false);
+    } else {
+      setIsMatriculaInvalid(true);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       api.get(`/niveis/${id}`)
@@ -161,7 +242,7 @@ export default function Nivel() {
           const SQL = await initSqlJs({
             locateFile: file => `/${file}`
           });
-          
+
           setDb(new SQL.Database(bytes));
 
         } catch (err) {
@@ -547,28 +628,147 @@ export default function Nivel() {
               alignItems="center"
               justifyContent="center"
               gap="4px"
-              cursor="pointer"
+              cursor={isSubmitting ? 'disabled' : 'pointer'}
+              onClick={isSubmitting ? () => null : handleQuerySubmit}
             >
-              <Icon
-                width={{ base: "18px", md: "34px" }}
-                height={{ base: "18px", md: "34px" }}
-                color="primaryButton"
-              >
-                <MdSend />
-              </Icon>
-
-              <Text
-                color="primaryText"
-                fontSize={{ base: "14px", md: "32px" }}
-                fontWeight="bold"
-              >
-                Enviar
-              </Text>
+              {isSubmitting ? (
+                <Spinner size="sm" color="primaryText" />
+              ) : (
+                <>
+                  <Icon
+                    width={{ base: "18px", md: "34px" }}
+                    height={{ base: "18px", md: "34px" }}
+                    color="primaryButton"
+                  >
+                    <MdSend />
+                  </Icon>
+                  <Text
+                    color="primaryText"
+                    fontSize={{ base: "14px", md: "32px" }}
+                    fontWeight="bold"
+                  >
+                    Enviar
+                  </Text>
+                </>
+              )}
             </Flex>
           </Flex>
         </Flex>
       </Flex>
 
+      <Dialog.Root
+        open={!!validationResult}
+        onOpenChange={(details) => {
+          if (!details.open) setValidationResult(null);
+        }}
+        size={{ base: 'xs', md: 'md' }}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title
+                  color={validationResult?.correct ? 'green' : 'red'}
+                >
+                  {validationResult?.correct ? "Resposta Correta!" : "Tente Novamente!"}
+                </Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                {validationResult?.feedback}
+              </Dialog.Body>
+              <Dialog.Footer>
+                {validationResult?.correct ? (
+                  <Flex gap={3}>
+                    <Dialog.ActionTrigger asChild>
+                      <Button onClick={() => navigate('/')} backgroundColor='primaryButton'>
+                        Voltar ao Menu
+                      </Button>
+                    </Dialog.ActionTrigger>
+                    {
+                      nivel?.hasNextLevel && (
+                        <Dialog.ActionTrigger asChild>
+                          <Button
+                            backgroundColor='secondaryBackground'
+                            onClick={() => {
+                              const currentLevel = Number(id || 1);
+                              navigate(`/nivel/${currentLevel + 1}`);
+                            }}
+                          >
+                            Próximo Nível
+                          </Button>
+                        </Dialog.ActionTrigger>
+                      )
+                    }
+                  </Flex>
+                ) : (
+                  <Dialog.ActionTrigger asChild>
+                    <Button backgroundColor='primaryButton'>Tentar Novamente</Button>
+                  </Dialog.ActionTrigger>
+                )}
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+
+      <Dialog.Root
+        open={isMatriculaDialogOpen}
+        onOpenChange={(details) => {
+          if (!details.open) setMatriculaDialogOpen(false);
+        }}
+        // Impede que o usuário feche sem escolher uma opção
+        closeOnEscape={false}
+        closeOnInteractOutside={false}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Contribua com a Pesquisa</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Text mb={4}>
+                  Esta plataforma é parte de um Trabalho de Conclusão de Curso (TCC) da Universidade de Brasília (UnB).
+                  Para nos ajudar na coleta de dados para a pesquisa, você poderia, por favor, fornecer sua matrícula?
+                  Seus dados serão utilizados de forma anônima e exclusivamente para fins acadêmicos.
+                </Text>
+
+                <Field.Root invalid={isMatriculaInvalid}>
+                  <Input
+                    placeholder="Digite sua matrícula (apenas números)"
+                    value={matriculaInput}
+                    onChange={handleMatriculaInputChange}
+                  />
+                  <Field.ErrorText>
+                    Por favor, digite apenas números.
+                  </Field.ErrorText>
+                </Field.Root>
+
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Flex gap={3}>
+                  <Button backgroundColor="primaryButton" onClick={() => handleMatriculaDialogSubmit(true)}>
+                    Prefiro não informar
+                  </Button>
+                  <Button
+                    backgroundColor="secondaryBackground"
+                    onClick={() => handleMatriculaDialogSubmit(false)}
+                    // Desabilita o botão se o input estiver vazio ou inválido
+                    disabled={!matriculaInput.trim() || isMatriculaInvalid}
+                  >
+                    Enviar Matrícula
+                  </Button>
+                </Flex>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Box>
   )
 }
