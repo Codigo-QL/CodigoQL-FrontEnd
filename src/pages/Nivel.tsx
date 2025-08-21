@@ -112,7 +112,6 @@ export default function Nivel() {
       setQueryError(null);
 
       const results = db.exec(code);
-      console.log("Resultado da Query:", results);
 
       setQueryResult(results);
 
@@ -148,15 +147,22 @@ export default function Nivel() {
         setIsDbLoading(true);
         setDbError(null);
         try {
-          const response = await api.get(`/niveis/database/${nivel.codigo_base}`, {
-            responseType: 'arraybuffer',
-          });
+          const response = await api.get(`/niveis/database/${nivel.codigo_base}`);
+
+          const base64Data = response.data.data;
+
+          const binaryString = atob(base64Data);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
 
           const SQL = await initSqlJs({
             locateFile: file => `/${file}`
           });
-
-          setDb(new SQL.Database(new Uint8Array(response.data)));
+          
+          setDb(new SQL.Database(bytes));
 
         } catch (err) {
           console.error("Erro ao carregar o banco de dados:", err);
