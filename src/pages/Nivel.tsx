@@ -1,6 +1,6 @@
-import { Alert, Box, Code, CodeBlock, Flex, Float, Icon, IconButton, Image, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
+import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Flex, Float, Icon, IconButton, Image, Portal, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import api from '../services/api';
@@ -23,6 +23,7 @@ interface NivelData {
     imagem: { [key: string]: number } | null;
   };
   codigo_base: string;
+  hasNextLevel: boolean;
 }
 
 type QueryResult = {
@@ -72,6 +73,8 @@ const markdownComponents = {
 
 export default function Nivel() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const [nivel, setNivel] = useState<NivelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +85,8 @@ export default function Nivel() {
   const [queryResult, setQueryResult] = useState<QueryResult[] | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [activeQueryTab, setActiveQueryTab] = useState('sql');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
 
   const imageUrl = useMemo(() => {
     if (nivel?.personagem?.imagem) {
@@ -125,6 +130,26 @@ export default function Nivel() {
     }
   };
 
+  const handleQuerySubmit = async () => {
+    if (!id) return;
+
+    setIsSubmitting(true);
+    setValidationResult(null);
+    try {
+      handleTestQuery();
+      const response = await api.post(`/niveis/validate/${id}`, { userQuery: code });
+      setValidationResult(response.data);
+    } catch (err) {
+      console.error("Erro ao enviar a resposta:", err);
+      setValidationResult({
+        correct: false,
+        feedback: "Não foi possível validar sua resposta. Tente novamente mais tarde.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       api.get(`/niveis/${id}`)
@@ -161,7 +186,7 @@ export default function Nivel() {
           const SQL = await initSqlJs({
             locateFile: file => `/${file}`
           });
-          
+
           setDb(new SQL.Database(bytes));
 
         } catch (err) {
@@ -547,28 +572,92 @@ export default function Nivel() {
               alignItems="center"
               justifyContent="center"
               gap="4px"
-              cursor="pointer"
+              cursor={isSubmitting ? 'disabled' : 'pointer'}
+              onClick={isSubmitting ? () => null : handleQuerySubmit}
             >
-              <Icon
-                width={{ base: "18px", md: "34px" }}
-                height={{ base: "18px", md: "34px" }}
-                color="primaryButton"
-              >
-                <MdSend />
-              </Icon>
-
-              <Text
-                color="primaryText"
-                fontSize={{ base: "14px", md: "32px" }}
-                fontWeight="bold"
-              >
-                Enviar
-              </Text>
+              {isSubmitting ? (
+                <Spinner size="sm" color="primaryText" />
+              ) : (
+                <>
+                  <Icon
+                    width={{ base: "18px", md: "34px" }}
+                    height={{ base: "18px", md: "34px" }}
+                    color="primaryButton"
+                  >
+                    <MdSend />
+                  </Icon>
+                  <Text
+                    color="primaryText"
+                    fontSize={{ base: "14px", md: "32px" }}
+                    fontWeight="bold"
+                  >
+                    Enviar
+                  </Text>
+                </>
+              )}
             </Flex>
           </Flex>
         </Flex>
       </Flex>
 
+      <Dialog.Root
+        open={!!validationResult}
+        onOpenChange={(details) => {
+          if (!details.open) setValidationResult(null);
+        }}
+        size={{base: 'xs', md: 'md'}}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title
+                  color={validationResult?.correct ? 'green' : 'red'}
+                >
+                  {validationResult?.correct ? "Resposta Correta!" : "Tente Novamente!"}
+                </Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                {validationResult?.feedback}
+              </Dialog.Body>
+              <Dialog.Footer>
+                {validationResult?.correct ? (
+                  <Flex gap={3}>
+                    <Dialog.ActionTrigger asChild>
+                      <Button onClick={() => navigate('/')} backgroundColor='primaryButton'>
+                        Voltar ao Menu
+                      </Button>
+                    </Dialog.ActionTrigger>
+                    {
+                      nivel?.hasNextLevel && (
+                        <Dialog.ActionTrigger asChild>
+                          <Button
+                            backgroundColor='secondaryBackground'
+                            onClick={() => {
+                              const currentLevel = Number(id || 1);
+                              navigate(`/nivel/${currentLevel + 1}`);
+                            }}
+                          >
+                            Próximo Nível
+                          </Button>
+                        </Dialog.ActionTrigger>
+                      )
+                    }
+                  </Flex>
+                ) : (
+                  <Dialog.ActionTrigger asChild>
+                    <Button backgroundColor='primaryButton'>Tentar Novamente</Button>
+                  </Dialog.ActionTrigger>
+                )}
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Box>
   )
 }
