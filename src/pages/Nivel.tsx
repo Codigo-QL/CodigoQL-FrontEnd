@@ -1,4 +1,4 @@
-import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Field, Flex, Float, Icon, IconButton, Image, Input, Portal, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
+import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Flex, Float, Icon, IconButton, Image, Portal, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import Editor from 'react-simple-code-editor';
 import hljs, { ensureSqlLanguageIsRegistered } from '../services/highlight';
 import 'highlight.js/styles/github-dark.css';
+import { MatriculaDialog } from '../components/MatriculaDialog';
 
 interface NivelData {
   id: number;
@@ -89,8 +90,6 @@ export default function Nivel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
   const [isMatriculaDialogOpen, setMatriculaDialogOpen] = useState(false);
-  const [matriculaInput, setMatriculaInput] = useState('');
-  const [isMatriculaInvalid, setIsMatriculaInvalid] = useState(false);
 
   const imageUrl = useMemo(() => {
     if (nivel?.personagem?.imagem) {
@@ -177,34 +176,17 @@ export default function Nivel() {
     }
   };
 
-  const handleQuerySubmit = () => {
+  const handleMatriculaSubmit = (matricula: string) => {
+    localStorage.setItem('matricula', matricula);
+    setMatriculaDialogOpen(false);
+  };
+
+  useEffect(() => {
     const matricula = localStorage.getItem('matricula');
     if (!matricula) {
       setMatriculaDialogOpen(true);
-    } else {
-      sendValidationRequest();
     }
-  };
-
-  const handleMatriculaDialogSubmit = (stayAnonymous: boolean) => {
-    if (!stayAnonymous && matriculaInput) {
-      localStorage.setItem('matricula', matriculaInput);
-    } else {
-      localStorage.setItem('matricula', 'anonimo');
-    }
-    setMatriculaDialogOpen(false);
-    sendValidationRequest();
-  };
-
-  const handleMatriculaInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (/^\d*$/.test(value)) {
-      setMatriculaInput(value);
-      setIsMatriculaInvalid(false);
-    } else {
-      setIsMatriculaInvalid(true);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -629,7 +611,7 @@ export default function Nivel() {
               justifyContent="center"
               gap="4px"
               cursor={isSubmitting ? 'disabled' : 'pointer'}
-              onClick={isSubmitting ? () => null : handleQuerySubmit}
+              onClick={isSubmitting ? () => null : sendValidationRequest}
             >
               {isSubmitting ? (
                 <Spinner size="sm" color="primaryText" />
@@ -715,60 +697,10 @@ export default function Nivel() {
         </Portal>
       </Dialog.Root>
 
-      <Dialog.Root
-        open={isMatriculaDialogOpen}
-        onOpenChange={(details) => {
-          if (!details.open) setMatriculaDialogOpen(false);
-        }}
-        // Impede que o usuário feche sem escolher uma opção
-        closeOnEscape={false}
-        closeOnInteractOutside={false}
-      >
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>
-                <Dialog.Title>Contribua com a Pesquisa</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>
-                <Text mb={4}>
-                  Esta plataforma é parte de um Trabalho de Conclusão de Curso (TCC) da Universidade de Brasília (UnB).
-                  Para nos ajudar na coleta de dados para a pesquisa, você poderia, por favor, fornecer sua matrícula?
-                  Seus dados serão utilizados de forma anônima e exclusivamente para fins acadêmicos.
-                </Text>
-
-                <Field.Root invalid={isMatriculaInvalid}>
-                  <Input
-                    placeholder="Digite sua matrícula (apenas números)"
-                    value={matriculaInput}
-                    onChange={handleMatriculaInputChange}
-                  />
-                  <Field.ErrorText>
-                    Por favor, digite apenas números.
-                  </Field.ErrorText>
-                </Field.Root>
-
-              </Dialog.Body>
-              <Dialog.Footer>
-                <Flex gap={3}>
-                  <Button backgroundColor="primaryButton" onClick={() => handleMatriculaDialogSubmit(true)}>
-                    Prefiro não informar
-                  </Button>
-                  <Button
-                    backgroundColor="secondaryBackground"
-                    onClick={() => handleMatriculaDialogSubmit(false)}
-                    // Desabilita o botão se o input estiver vazio ou inválido
-                    disabled={!matriculaInput.trim() || isMatriculaInvalid}
-                  >
-                    Enviar Matrícula
-                  </Button>
-                </Flex>
-              </Dialog.Footer>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
+      <MatriculaDialog 
+        isOpen={isMatriculaDialogOpen}
+        onSubmit={handleMatriculaSubmit}
+      />
     </Box>
   )
 }
