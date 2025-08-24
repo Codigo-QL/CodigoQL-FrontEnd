@@ -42,7 +42,7 @@ const highlightJsAdapter = createHighlightJsAdapter({
 
 
 const markdownComponents = {
-  p: (props: any) => <Text mb="4" {...props} />,
+  p: (props: any) => <Text fontSize={{ base: '12px', md: '20px' }} mb="4" {...props} />,
   code({ node, inline, className, children, ...props }: any) {
     if (!inline) {
       return (
@@ -290,6 +290,7 @@ export default function Nivel() {
           left="0"
           marginLeft="16px"
           cursor="pointer"
+          onClick={() => navigate(-1)}
         >
           <Icon
             size={{ base: "md", md: "2xl" }}
