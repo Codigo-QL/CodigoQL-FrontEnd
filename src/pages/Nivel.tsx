@@ -1,7 +1,7 @@
 import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Flex, Float, Icon, IconButton, Image, Portal, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import initSqlJs, { type Database } from 'sql.js';
 import { v4 as uuidv4 } from 'uuid';
 import api from '../services/api';
@@ -22,7 +22,6 @@ interface NivelData {
   };
   personagem: {
     nome: string;
-    imagem: { [key: string]: number } | null;
   };
   codigo_base: string;
   hasNextLevel: boolean;
@@ -91,24 +90,9 @@ export default function Nivel() {
   const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
   const [isMatriculaDialogOpen, setMatriculaDialogOpen] = useState(false);
 
-  const imageUrl = useMemo(() => {
-    if (nivel?.personagem?.imagem) {
-      const imageData = Object.values(nivel.personagem.imagem);
-
-      if (imageData.length > 0) {
-        let binaryString = '';
-        const chunkSize = 8192;
-        for (let i = 0; i < imageData.length; i += chunkSize) {
-          const chunk = imageData.slice(i, i + chunkSize);
-          binaryString += String.fromCharCode.apply(null, chunk);
-        }
-
-        const base64String = btoa(binaryString);
-        return `data:image/png;base64,${base64String}`;
-      }
-    }
-    return '';
-  }, [nivel]);
+  const imageUrl = nivel?.personagem?.nome 
+    ? `${import.meta.env.VITE_API_BASE_URL}/personagens/${nivel.personagem.nome}/imagem` 
+    : '';
 
   const handleTestQuery = () => {
     if (!db) {

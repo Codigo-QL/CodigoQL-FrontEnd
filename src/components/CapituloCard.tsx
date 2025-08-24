@@ -1,11 +1,10 @@
 import { Box, Flex, Text } from "@chakra-ui/react"
 import ReactMarkdown from 'react-markdown';
 import { NivelCard } from "./NivelCard";
+import type { Capitulo } from "../pages/Capitulos";
 
 interface CapituloCardProps {
-    codigo: string;
-    titulo: string;
-    descricao: string;
+    capitulo: Capitulo;
 }
 
 const markdownComponents = {
@@ -23,7 +22,7 @@ const markdownComponents = {
     ),
 };
 
-export const CapituloCard = ({ codigo, titulo, descricao } : CapituloCardProps) => {
+export const CapituloCard = ({ capitulo }: CapituloCardProps) => {
 
     return (
         <Flex
@@ -48,11 +47,11 @@ export const CapituloCard = ({ codigo, titulo, descricao } : CapituloCardProps) 
                     fontWeight='bold'
                     marginBottom={{ base: '4px', md: '8px' }}
                 >
-                    Capítulo {codigo} - {titulo}
+                    Capítulo {capitulo.codigo} - {capitulo.titulo}
                 </Text>
 
                 <ReactMarkdown components={markdownComponents}>
-                    {descricao}
+                    {capitulo.descricao}
                 </ReactMarkdown>
             </Flex>
 
@@ -60,7 +59,7 @@ export const CapituloCard = ({ codigo, titulo, descricao } : CapituloCardProps) 
                 flex={1}
                 minH={0}
                 overflowY="auto"
-                marginY='16px'
+                paddingY='16px'
                 justifyContent='center'
             >
                 <Flex
@@ -68,13 +67,10 @@ export const CapituloCard = ({ codigo, titulo, descricao } : CapituloCardProps) 
                     gap="16px"
                     justifyContent="center"
                     alignItems='center'
-
                 >
-                    <NivelCard
-                        image=""
-                        nivelId={1}
-                    />
-
+                    {capitulo.nivel.map((item) => (
+                        <NivelCard key={item.id} nivel={item} />
+                    ))}
                 </Flex>
             </Flex>
         </Flex>

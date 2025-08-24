@@ -1,8 +1,42 @@
-import { Flex, Image, Text } from "@chakra-ui/react";
+import { Flex, Image, Spinner, Text } from "@chakra-ui/react";
 import LogoHeader from "../assets/LogoHeader.svg";
 import { CapituloCard } from "../components/CapituloCard";
+import { useEffect, useState } from "react";
+import api from "../services/api";
+
+export interface Nivel {
+    id: number;
+    personagem: {
+        nome: string;
+    };
+}
+
+export interface Capitulo {
+    codigo: string;
+    titulo: string;
+    descricao: string;
+    nivel: Nivel[];
+}
 
 export default function Capitulos() {
+    const [capitulos, setCapitulos] = useState<Capitulo[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        api.get('/capitulos')
+            .then(response => {
+                setCapitulos(response.data);
+            })
+            .catch(err => {
+                console.error("Erro ao buscar capítulos:", err);
+                setError("Não foi possível carregar os capítulos.");
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, []);
+
     return (
         <Flex
             height='100dvh'
@@ -45,11 +79,11 @@ export default function Capitulos() {
                     p={2}
                 >
 
-                    <CapituloCard
-                        codigo="C1"
-                        titulo="Boas Vindas à UCC"
-                        descricao={"Seu primeiro dia como estagiário na UCC parecia ser chato como qualquer outro, entregas de café e organização de arquivos. Até que você ouve um chamado inesperado da rádio de sua supervisora, um chamado que irá mudar a sua vida.\n\n**Conteúdos abordados neste capítulo:**\n\n- Consultas em uma única tabela\n- Consultas envolvendo mais de uma tabela\n- Consultas com funções de agregação\n- Consultas com agrupamento e ordenação"}
-                    />
+                    {loading && <Spinner size="xl" />}
+                    {error && <Text color="red.500">{error}</Text>}
+                    {!loading && !error && capitulos.map(capitulo => (
+                        <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
+                    ))}
 
                 </Flex>
             </Flex>
