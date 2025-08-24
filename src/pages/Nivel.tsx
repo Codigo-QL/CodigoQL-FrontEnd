@@ -79,7 +79,7 @@ export default function Nivel() {
   const [nivel, setNivel] = useState<NivelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState<string>('SELECT * FROM pessoa;');
+  const [code, setCode] = useState<string>('SELECT * FROM WHERE');
   const [db, setDb] = useState<Database | null>(null);
   const [isDbLoading, setIsDbLoading] = useState<boolean>(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -274,7 +274,7 @@ export default function Nivel() {
           left="0"
           marginLeft="16px"
           cursor="pointer"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/capitulos")}
         >
           <Icon
             size={{ base: "md", md: "2xl" }}
@@ -658,6 +658,9 @@ export default function Nivel() {
                           <Button
                             backgroundColor='secondaryBackground'
                             onClick={() => {
+                              setCode('SELECT * FROM WHERE');
+                              setQueryResult(null);
+                              setActiveQueryTab('sql');
                               const currentLevel = Number(id || 1);
                               navigate(`/nivel/${currentLevel + 1}`);
                             }}
