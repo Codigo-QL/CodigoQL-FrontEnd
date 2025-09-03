@@ -8,7 +8,7 @@ interface CapituloCardProps {
 }
 
 const markdownComponents = {
-    p: (props: any) => <Text fontSize={{ base: '12px', md: '16px' }} mb={2}>{props.children}</Text>,
+    p: (props: any) => <Text fontSize={{ base: '12px', md: '14px' }} mb={2}>{props.children}</Text>,
     strong: (props: any) => <Text as="b">{props.children}</Text>,
     ul: (props: any) => (
         <Box as="ul" pl={5} style={{ listStyleType: 'disc' }} fontSize={{ base: '12px', md: '16px' }}>
@@ -43,7 +43,7 @@ export const CapituloCard = ({ capitulo }: CapituloCardProps) => {
                 borderColor='primaryButton'
             >
                 <Text
-                    fontSize={{ base: '16px', md: '24px' }}
+                    fontSize={{ base: '16px', md: '20px' }}
                     fontWeight='bold'
                     marginBottom={{ base: '4px', md: '8px' }}
                 >
