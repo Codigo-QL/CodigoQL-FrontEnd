@@ -48,8 +48,8 @@ export default function Capitulos() {
             >
                 <Image
                     src={LogoHeader}
-                    width={{ base: '115px', md: '242px' }}
-                    marginTop={{ base: '32px', md: '48px' }}
+                    width='115px'
+                    marginTop='32px'
                     marginBottom={{ base: '12px', md: '16px' }}
                 />
             </Flex>
@@ -61,8 +61,8 @@ export default function Capitulos() {
             >
                 <Text
                     color='primaryButton'
-                    fontSize={{ base: '20px', md: '36px' }}
-                    marginBottom={{ base: '32px', md: '48px' }}
+                    fontSize={{ base: '20px', md: '30px' }}
+                    marginBottom='8px'
                 >
                     Selecione o Nível
                 </Text>

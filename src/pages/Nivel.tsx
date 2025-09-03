@@ -642,13 +642,17 @@ export default function Nivel() {
                 </Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                {validationResult?.feedback}
+                <Text
+                  fontSize='16px'
+                >
+                  {validationResult?.feedback}
+                </Text>
               </Dialog.Body>
               <Dialog.Footer>
                 {validationResult?.correct ? (
                   <Flex gap={3}>
                     <Dialog.ActionTrigger asChild>
-                      <Button onClick={() => navigate('/')} backgroundColor='primaryButton'>
+                      <Button onClick={() => navigate('/capitulos')} backgroundColor='primaryButton'>
                         Voltar ao Menu
                       </Button>
                     </Dialog.ActionTrigger>
