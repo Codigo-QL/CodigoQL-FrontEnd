@@ -41,7 +41,7 @@ const highlightJsAdapter = createHighlightJsAdapter({
 
 
 const markdownComponents = {
-  p: (props: any) => <Text fontSize={{ base: '12px', md: '20px' }} mb="4" {...props} />,
+  p: (props: any) => <Text fontSize={{ base: '20px', md: '20px' }} mb="4" {...props} />,
   code({ node, inline, className, children, ...props }: any) {
     if (!inline) {
       return (
@@ -86,12 +86,13 @@ export default function Nivel() {
   const [queryResult, setQueryResult] = useState<QueryResult[] | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [activeQueryTab, setActiveQueryTab] = useState('sql');
+  const [activeCaseTab, setActiveCaseTab] = useState('caso');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
   const [isMatriculaDialogOpen, setMatriculaDialogOpen] = useState(false);
 
-  const imageUrl = nivel?.personagem?.nome 
-    ? `${import.meta.env.VITE_API_BASE_URL}/personagens/${nivel.personagem.nome}/imagem` 
+  const imageUrl = nivel?.personagem?.nome
+    ? `${import.meta.env.VITE_API_BASE_URL}/personagens/${nivel.personagem.nome}/imagem`
     : '';
 
   const handleTestQuery = () => {
@@ -174,6 +175,7 @@ export default function Nivel() {
 
   useEffect(() => {
     if (id) {
+      setActiveCaseTab('caso');
       api.get(`/niveis/${id}`)
         .then(response => {
           setNivel(response.data);
@@ -298,7 +300,8 @@ export default function Nivel() {
         flexDirection={{ base: "column", md: "row" }}
       >
         <Tabs.Root
-          defaultValue="caso"
+          value={activeCaseTab}
+          onValueChange={(details) => setActiveCaseTab(details.value)}
           variant="outline"
           justify="end"
           width="100%"
@@ -386,7 +389,7 @@ export default function Nivel() {
               </Box>
 
               <Text
-                fontSize={{ base: "12px", md: "20px" }}
+                fontSize={{ base: "16px", md: "20px" }}
                 color="primaryButton"
                 flex="1"
                 textAlign="justify"
@@ -568,6 +571,7 @@ export default function Nivel() {
               justifyContent="center"
               gap="4px"
               cursor="pointer"
+              onClick={handleTestQuery}
             >
               <Icon
                 width={{ base: "18px", md: "34px" }}
@@ -581,7 +585,6 @@ export default function Nivel() {
                 color="primaryText"
                 fontSize={{ base: "14px", md: "32px" }}
                 fontWeight="bold"
-                onClick={handleTestQuery}
               >
                 Testar
               </Text>
@@ -689,7 +692,7 @@ export default function Nivel() {
         </Portal>
       </Dialog.Root>
 
-      <MatriculaDialog 
+      <MatriculaDialog
         isOpen={isMatriculaDialogOpen}
         onSubmit={handleMatriculaSubmit}
       />
