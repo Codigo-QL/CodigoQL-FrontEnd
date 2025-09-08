@@ -51,6 +51,7 @@ export default function Capitulos() {
                     width='115px'
                     marginTop='32px'
                     marginBottom={{ base: '12px', md: '16px' }}
+                    userSelect='none'
                 />
             </Flex>
             <Flex
@@ -58,11 +59,12 @@ export default function Capitulos() {
                 alignItems='center'
                 flex={1}
                 minH={0}
-            >
+                >
                 <Text
                     color='primaryButton'
                     fontSize={{ base: '20px', md: '30px' }}
                     marginBottom='8px'
+                    userSelect='none'
                 >
                     Selecione o Nível
                 </Text>
