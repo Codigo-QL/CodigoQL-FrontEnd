@@ -10,6 +10,10 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
     const navigate = useNavigate();
     const imageUrl = `${import.meta.env.VITE_API_BASE_URL}/personagens/${nivel.personagem.nome}/imagem`;
 
+    const completedLevelsRaw = localStorage.getItem('completedLevels');
+    const completedLevels = completedLevelsRaw ? JSON.parse(completedLevelsRaw) : [];
+    const isCompleted = completedLevels.includes(nivel.id);
+
     return (
         <Flex
             flexDirection='column'
@@ -34,7 +38,7 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
             </Flex>
 
             <Flex
-                backgroundColor='secondaryBackground'
+                backgroundColor={isCompleted ? 'greenHighlight' : 'secondaryBackground'}
                 height='22px'
                 borderBottomRadius='4px'
                 alignItems='center'
@@ -43,8 +47,9 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
                 <Text
                     color='primaryText'
                     textAlign='center'
+                    fontSize={{base: '12px', md: '14px'}}
                 >
-                    Nível {nivel.id}
+                    Nível {nivel.id}{isCompleted ? ' - Concluído' : ''}
                 </Text>
             </Flex>
         </Flex>

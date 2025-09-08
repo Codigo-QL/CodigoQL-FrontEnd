@@ -8,6 +8,7 @@ const system = createSystem(defaultConfig, {
         primaryButton: { value: "#050F1A" },
         primaryText: { value: "#F0F0F0" },
         secondaryBackground: { value: "#62A6F5" },
+        greenHighlight: { value: "#48D4B3" }
       },
       fonts: {
         body: { value: "'Oswald', sans-serif" },
