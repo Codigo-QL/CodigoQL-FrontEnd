@@ -392,8 +392,10 @@ export default function Nivel() {
                 fontSize={{ base: "16px", md: "20px" }}
                 color="primaryButton"
                 flex="1"
+                overflow='auto'
                 textAlign="justify"
                 padding="4px"
+                maxH={{ base: "154px", md: "235px" }}
               >
                 {nivel.enunciado}
               </Text>
