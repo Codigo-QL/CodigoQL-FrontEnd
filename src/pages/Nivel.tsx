@@ -105,7 +105,7 @@ export default function Nivel() {
       setQueryError(null);
 
       const results = db.exec(code);
-
+      
       setQueryResult(results);
 
     } catch (err: any) {
@@ -556,6 +556,12 @@ export default function Nivel() {
                 {!queryError && !queryResult && (
                   <Text>O resultado da sua query aparecerá aqui.</Text>
                 )}
+
+                {
+                  queryResult && !queryResult.length && (
+                    <Text>A query foi executada com sucesso, mas não retornou resultados.</Text>
+                  )
+                }
               </Tabs.Content>
             </Box>
           </Tabs.Root>
