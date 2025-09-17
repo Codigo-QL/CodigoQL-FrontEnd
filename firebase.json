@@ -8,8 +8,13 @@
     ],
     "redirects": [
       {
-        "source": "**",
-        "destination": "/manutencao",
+        "source": "/",
+        "destination": "/manutencao.html",
+        "type": 302
+      },
+      {
+        "source": "/:path((?!manutencao\\.html|codigoql\\.png).*)",
+        "destination": "/manutencao.html",
         "type": 302
       }
     ],
