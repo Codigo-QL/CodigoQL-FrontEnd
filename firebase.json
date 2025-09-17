@@ -9,7 +9,7 @@
     "redirects": [
       {
         "source": "**",
-        "destination": "/manutencao.html",
+        "destination": "/manutencao",
         "type": 302
       }
     ],
