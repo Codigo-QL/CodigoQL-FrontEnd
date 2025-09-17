@@ -6,6 +6,13 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "redirects": [
+      {
+        "source": "/:path((?!manutencao\\.html|codigoql\\.png).*)",
+        "destination": "/manutencao.html",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
         "source": "**",
