@@ -8,7 +8,7 @@
     ],
     "redirects": [
       {
-        "source": "/:path((?!manutencao\\.html|codigoql\\.png).*)",
+        "source": "**",
         "destination": "/manutencao.html",
         "type": 302
       }
