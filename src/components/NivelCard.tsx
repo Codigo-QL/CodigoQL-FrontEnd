@@ -17,8 +17,8 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
     return (
         <Flex
             flexDirection='column'
-            width={{ base: '100px', md: '120px' }}
-            height={{ base: '122px', md: '142px' }}
+            width={{ base: '100px', md: '100px' }}
+            height={{ base: '122px', md: '102px' }}
             borderRadius='4px'
             cursor='pointer'
             onClick={() => navigate(`/nivel/${nivel.id}`)}
@@ -26,13 +26,15 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
             <Flex
                 flex={1}
                 borderTopRadius='4px'
+                justifyContent='center'
+                backgroundColor='#FFFFFF'
             >
                 <Image
                     borderTopRadius='4px'
                     src={imageUrl}
                     alt={`Imagem do nível ${nivel.id}`}
-                    width={{ base: '100px', md: '120px' }}
-                    height={{ base: '100px', md: '120px' }}
+                    width={{ base: '100px', md: '80px' }}
+                    height={{ base: '100px', md: '80px' }}
                     objectFit='fill'
                 />
             </Flex>
@@ -47,7 +49,7 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
                 <Text
                     color='primaryText'
                     textAlign='center'
-                    fontSize={{base: '12px', md: '14px'}}
+                    fontSize='12px'
                 >
                     Nível {nivel.id}{isCompleted ? ' - Concluído' : ''}
                 </Text>

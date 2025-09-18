@@ -62,7 +62,7 @@ export default function Capitulos() {
                 >
                 <Text
                     color='primaryButton'
-                    fontSize={{ base: '20px', md: '30px' }}
+                    fontSize={{ base: '20px', md: '25px' }}
                     marginBottom='8px'
                     userSelect='none'
                 >
