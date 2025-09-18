@@ -103,6 +103,7 @@ export default function Nivel() {
 
     try {
       setQueryError(null);
+      setQueryResult(null);
 
       const results = db.exec(code);
       
@@ -304,7 +305,7 @@ export default function Nivel() {
           onValueChange={(details) => setActiveCaseTab(details.value)}
           variant="outline"
           justify="end"
-          width="100%"
+          width={{base: "100%", md: "50%"}}
           height={{ base: "55%", md: "100%" }}
           display="flex"
           flexDirection="column"
@@ -426,7 +427,7 @@ export default function Nivel() {
         </Tabs.Root>
 
         <Flex
-          width="100%"
+          width={{base: "100%", md: "50%"}}
           height={{ base: "40%", md: "100%" }}
           gap="16px"
           flexDirection="column"

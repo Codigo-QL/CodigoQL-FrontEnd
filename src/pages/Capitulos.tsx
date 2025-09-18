@@ -62,7 +62,7 @@ export default function Capitulos() {
                 >
                 <Text
                     color='primaryButton'
-                    fontSize={{ base: '20px', md: '30px' }}
+                    fontSize={{ base: '20px', md: '25px' }}
                     marginBottom='8px'
                     userSelect='none'
                 >
@@ -83,6 +83,9 @@ export default function Capitulos() {
 
                     {loading && <Spinner size="xl" />}
                     {error && <Text color="red.500">{error}</Text>}
+                    {!loading && !error && capitulos.map(capitulo => (
+                        <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
+                    ))}
                     {!loading && !error && capitulos.map(capitulo => (
                         <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
                     ))}

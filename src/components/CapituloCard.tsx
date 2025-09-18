@@ -11,7 +11,7 @@ const markdownComponents = {
     p: (props: any) => <Text fontSize={{ base: '12px', md: '14px' }} mb={2}>{props.children}</Text>,
     strong: (props: any) => <Text as="b">{props.children}</Text>,
     ul: (props: any) => (
-        <Box as="ul" pl={5} style={{ listStyleType: 'disc' }} fontSize={{ base: '12px', md: '16px' }}>
+        <Box as="ul" pl={5} style={{ listStyleType: 'disc' }} fontSize={{ base: '12px', md: '14px' }}>
             {props.children}
         </Box>
     ),
@@ -29,6 +29,7 @@ export const CapituloCard = ({ capitulo }: CapituloCardProps) => {
             flexDirection='column'
             width={{ base: '100%', md: 'calc(50% - 8px)' }}
             height={{ base: '470px', md: '95%' }}
+            maxH={{md: '610px'}}
             borderWidth='4px'
             borderColor='primaryButton'
             borderRadius='4px'
@@ -36,11 +37,13 @@ export const CapituloCard = ({ capitulo }: CapituloCardProps) => {
             <Flex
                 flexDirection='column'
                 height='fit-content'
+                maxH={{md: '50%'}}
                 paddingX='8px'
                 paddingTop='4px'
                 paddingBottom='16px'
                 borderBottomWidth='4px'
                 borderColor='primaryButton'
+                overflow='auto'
             >
                 <Text
                     fontSize={{ base: '16px', md: '20px' }}
