@@ -1,15 +1,16 @@
-import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Flex, Float, Icon, IconButton, Image, Portal, Spinner, Table, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
+import { Alert, Box, Button, CloseButton, Code, CodeBlock, Dialog, Flex, Float, Icon, IconButton, Image, Portal, Spinner, Tabs, Text, createHighlightJsAdapter } from '@chakra-ui/react'
 import { MdArrowBack, MdScience, MdSend } from "react-icons/md"
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import initSqlJs, { type Database } from 'sql.js';
 import { v4 as uuidv4 } from 'uuid';
 import api from '../services/api';
 import ReactMarkdown from 'react-markdown';
-import Editor from 'react-simple-code-editor';
 import hljs, { ensureSqlLanguageIsRegistered } from '../services/highlight';
 import 'highlight.js/styles/github-dark.css';
 import { MatriculaDialog } from '../components/MatriculaDialog';
+import { SqlEditor } from '../components/SqlEditor';
+import { ResultadoCard } from '../components/ResultadoCard';
 
 interface NivelData {
   id: number;
@@ -80,12 +81,14 @@ export default function Nivel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<string>('SELECT * FROM WHERE');
+  const handleCodeChange = useCallback((newCode: string) => {
+  setCode(newCode);
+}, []);
   const [db, setDb] = useState<Database | null>(null);
   const [isDbLoading, setIsDbLoading] = useState<boolean>(true);
   const [dbError, setDbError] = useState<string | null>(null);
   const [queryResult, setQueryResult] = useState<QueryResult[] | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
-  const [activeQueryTab, setActiveQueryTab] = useState('sql');
   const [activeCaseTab, setActiveCaseTab] = useState('caso');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
@@ -106,7 +109,7 @@ export default function Nivel() {
       setQueryResult(null);
 
       const results = db.exec(code);
-      
+
       setQueryResult(results);
 
     } catch (err: any) {
@@ -114,8 +117,6 @@ export default function Nivel() {
 
       setQueryResult(null);
       setQueryError(err.message);
-    } finally {
-      setActiveQueryTab('resultado');
     }
   };
 
@@ -299,13 +300,14 @@ export default function Nivel() {
         height={{ base: "85%", md: "80%" }}
         gap="16px"
         flexDirection={{ base: "column", md: "row" }}
+        overflow={{base: 'auto'}}
       >
         <Tabs.Root
           value={activeCaseTab}
           onValueChange={(details) => setActiveCaseTab(details.value)}
           variant="outline"
           justify="end"
-          width={{base: "100%", md: "50%"}}
+          width={{ base: "100%", md: "50%" }}
           height={{ base: "55%", md: "100%" }}
           display="flex"
           flexDirection="column"
@@ -427,145 +429,91 @@ export default function Nivel() {
         </Tabs.Root>
 
         <Flex
-          width={{base: "100%", md: "50%"}}
+          width={{ base: "100%", md: "50%" }}
           height={{ base: "40%", md: "100%" }}
           gap="16px"
           flexDirection="column"
         >
-          <Tabs.Root
-            value={activeQueryTab}
-            onValueChange={(details) => setActiveQueryTab(details.value)}
-            variant="outline"
-            justify="end"
-            width="100%"
-            height="90%"
-            display="flex"
-            flexDirection="column"
+
+          <Flex
+            flexDirection='column'
           >
-            <Tabs.List
-              minH={{ base: "23px", md: "32px" }}
+            <Flex
+              alignSelf='flex-end'
+              backgroundColor='primaryButton'
+              width={{ base: '60px', md: '104px' }}
+              height={{ base: '24px', md: '32px' }}
+              alignItems='center'
+              justifyContent='center'
+              borderRadius='4px 4px 0 0'
             >
-              <Tabs.Trigger
-                value="sql"
-                bg="secondaryBackground"
-                color="primaryText"
-                _selected={{ bg: "primaryButton" }}
-                marginRight="8px"
-                width={{ base: "59px", md: "104px" }}
-                height={{ base: "23px", md: "32px" }}
-                fontSize={{ base: "14px", md: "24px" }}
-                fontWeight="bold"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
+              <Text
+                color='primaryText'
+                fontSize={{ base: '14px', md: '24px' }}
+                fontWeight='bold'
+                textAlign='center'
               >
                 SQL
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                value="resultado"
-                bg="secondaryBackground"
-                color="primaryText"
-                _selected={{ bg: "primaryButton" }}
-                width={{ base: "59px", md: "104px" }}
-                height={{ base: "23px", md: "32px" }}
-                fontSize={{ base: "14px", md: "24px" }}
-                fontWeight="bold"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
+              </Text>
+            </Flex>
+            <Flex
+              width="100%"
+              height={{ base: '80px', md: '120px' }}
+              borderWidth='4px'
+              borderRadius='4px 0px 4px 4px'
+              borderColor='primaryButton'
+              overflow='auto'
+            >
+              {isDbLoading ? (
+                <Flex direction="column" align="center" justify="center" height="100%">
+                  <Spinner size="xl" />
+                  <Text mt={4}>Configurando banco de dados...</Text>
+                </Flex>
+              ) : dbError ? (
+                <Text p={4} color="red.500">{dbError}</Text>
+              ) : (
+                <SqlEditor code={code} onCodeChange={handleCodeChange} />
+              )}
+            </Flex>
+          </Flex>
+
+          <Flex
+            flexDirection='column'
+            height={{base: '100%', md: '50%'}}
+          >
+            <Flex
+              alignSelf='flex-end'
+              backgroundColor='primaryButton'
+              width={{ base: '60px', md: '104px' }}
+              height={{ base: '24px', md: '32px' }}
+              alignItems='center'
+              justifyContent='center'
+              borderRadius='4px 4px 0 0'
+            >
+              <Text
+                color='primaryText'
+                fontSize={{ base: '14px', md: '24px' }}
+                fontWeight='bold'
+                textAlign='center'
               >
                 Resultado
-              </Tabs.Trigger>
-            </Tabs.List>
-
-            <Box
-              borderWidth="4px"
-              borderColor="primaryButton"
-              overflowY="auto"
-              flex="1"
-              minH={0}
-              display="flex"
-              flexDirection="column"
+              </Text>
+            </Flex>
+            <Flex
+              width="100%"
+              height='100%'
+              borderWidth='4px'
+              borderRadius='4px 0px 4px 4px'
+              borderColor='primaryButton'
+              overflow='auto'
+              padding='4px'
             >
-              <Tabs.Content padding={0} value="sql" height="100%">
-
-                {isDbLoading ? (
-                  <Flex direction="column" align="center" justify="center" height="100%">
-                    <Spinner size="xl" />
-                    <Text mt={4}>Configurando banco de dados...</Text>
-                  </Flex>
-                ) : dbError ? (
-                  <Text p={4} color="red.500">{dbError}</Text>
-                ) : (
-                  <Editor
-                    value={code}
-                    onValueChange={code => setCode(code)}
-                    highlight={(code) => {
-                      ensureSqlLanguageIsRegistered();
-                      return hljs.highlight(code, { language: 'sql' }).value;
-                    }}
-                    padding={10}
-                    style={{
-                      fontFamily: '"Fira code", "Fira Mono", monospace',
-                      fontSize: 16,
-                      height: '100%',
-                    }}
-                    className="hljs"
-                  />
-                )}
-              </Tabs.Content>
-              <Tabs.Content value="resultado" height="100%" p={4} overflowY="auto">
-                {queryError && (
-                  <Alert.Root status='error' variant="solid" borderRadius="md">
-                    <Alert.Indicator />
-                    <Alert.Title>Erro na Query!</Alert.Title>
-                    <Alert.Description>{queryError}</Alert.Description>
-                  </Alert.Root>
-                )}
-
-                {!queryError && queryResult && (
-                  queryResult.map((result, index) => (
-                    <Box key={index} mb={6}>
-                      {result.values.length > 0 ? (
-                        <Table.Root>
-                          <Table.Header>
-                            <Table.Row bg="secondaryBackground">
-                              {result.columns.map((columnName) => (
-                                <Table.ColumnHeader key={columnName} color="primaryText" textAlign="center">
-                                  {columnName}
-                                </Table.ColumnHeader>
-                              ))}
-                            </Table.Row>
-                          </Table.Header>
-                          <Table.Body>
-                            {result.values.map((row, rowIndex) => (
-                              <Table.Row key={rowIndex}>
-                                {row.map((cell, cellIndex) => (
-                                  <Table.Cell key={cellIndex} textAlign="center">{cell}</Table.Cell>
-                                ))}
-                              </Table.Row>
-                            ))}
-                          </Table.Body>
-                        </Table.Root>
-                      ) : (
-                        <Text>A query foi executada com sucesso, mas não retornou resultados.</Text>
-                      )}
-                    </Box>
-                  ))
-                )}
-
-                {!queryError && !queryResult && (
-                  <Text>O resultado da sua query aparecerá aqui.</Text>
-                )}
-
-                {
-                  queryResult && !queryResult.length && (
-                    <Text>A query foi executada com sucesso, mas não retornou resultados.</Text>
-                  )
-                }
-              </Tabs.Content>
-            </Box>
-          </Tabs.Root>
+              <ResultadoCard 
+                queryResult={queryResult}
+                queryError={queryError}
+              />
+            </Flex>
+          </Flex>
 
           <Flex
             alignSelf="flex-end"
@@ -676,7 +624,6 @@ export default function Nivel() {
                             onClick={() => {
                               setCode('SELECT * FROM WHERE');
                               setQueryResult(null);
-                              setActiveQueryTab('sql');
                               const currentLevel = Number(id || 1);
                               navigate(`/nivel/${currentLevel + 1}`);
                             }}
