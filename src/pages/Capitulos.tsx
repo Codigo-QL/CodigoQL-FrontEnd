@@ -86,9 +86,6 @@ export default function Capitulos() {
                     {!loading && !error && capitulos.map(capitulo => (
                         <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
                     ))}
-                    {!loading && !error && capitulos.map(capitulo => (
-                        <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
-                    ))}
 
                 </Flex>
             </Flex>
