@@ -31,14 +31,7 @@ export default function Capitulos() {
     useEffect(() => {
         const fetchCapitulos = async () => {
             try {
-                let headers = {};
-
-                if (user) {
-                    const idToken = await user.getIdToken();
-                    headers = { Authorization: `Bearer ${idToken}` };
-                }
-
-                const response = await api.get('/capitulos', { headers });
+                const response = await api.get('/capitulos');
                 setCapitulos(response.data);
             } catch (error) {
                 console.error("Erro ao buscar capítulos:", error);
