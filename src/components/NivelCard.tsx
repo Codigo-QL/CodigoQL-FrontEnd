@@ -12,7 +12,7 @@ export const NivelCard = ({ nivel }: NivelCardProps) => {
 
     const completedLevelsRaw = localStorage.getItem('completedLevels');
     const completedLevels = completedLevelsRaw ? JSON.parse(completedLevelsRaw) : [];
-    const isCompleted = completedLevels.includes(nivel.id);
+    const isCompleted = nivel._count ? nivel._count.submissao > 0 : completedLevels.includes(nivel.id);
 
     return (
         <Flex

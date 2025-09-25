@@ -3,12 +3,16 @@ import LogoHeader from "../assets/LogoHeader.svg";
 import { CapituloCard } from "../components/CapituloCard";
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 export interface Nivel {
     id: number;
     personagem: {
         nome: string;
     };
+    _count?: {
+        submissao: number;
+    }
 }
 
 export interface Capitulo {
@@ -20,22 +24,33 @@ export interface Capitulo {
 
 export default function Capitulos() {
     const [capitulos, setCapitulos] = useState<Capitulo[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [contentLoading, setContentLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { user, loading } = useAuth();
 
     useEffect(() => {
-        api.get('/capitulos')
-            .then(response => {
+        const fetchCapitulos = async () => {
+            try {
+                let headers = {};
+
+                if (user) {
+                    const idToken = await user.getIdToken();
+                    headers = { Authorization: `Bearer ${idToken}` };
+                }
+
+                const response = await api.get('/capitulos', { headers });
                 setCapitulos(response.data);
-            })
-            .catch(err => {
-                console.error("Erro ao buscar capítulos:", err);
+            } catch (error) {
+                console.error("Erro ao buscar capítulos:", error);
                 setError("Não foi possível carregar os capítulos.");
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, []);
+            } finally {
+                setContentLoading(false);
+            }
+        };
+        if (!loading) {
+            fetchCapitulos();
+        }
+    }, [user]);
 
     return (
         <Flex
@@ -59,7 +74,7 @@ export default function Capitulos() {
                 alignItems='center'
                 flex={1}
                 minH={0}
-                >
+            >
                 <Text
                     color='primaryButton'
                     fontSize={{ base: '20px', md: '25px' }}
@@ -81,9 +96,9 @@ export default function Capitulos() {
                     p={2}
                 >
 
-                    {loading && <Spinner size="xl" />}
+                    {contentLoading && <Spinner size="xl" />}
                     {error && <Text color="red.500">{error}</Text>}
-                    {!loading && !error && capitulos.map(capitulo => (
+                    {!contentLoading && !error && capitulos.map(capitulo => (
                         <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
                     ))}
 
