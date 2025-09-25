@@ -1,4 +1,4 @@
-import { Box, Flex, Image, Text } from '@chakra-ui/react'
+import { Box, Flex, Image, Spinner, Text } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../assets/Logo.svg';
@@ -7,7 +7,7 @@ import GoogleLogo from '../assets/Google.png';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user, signInWithGoogle, logout } = useAuth();
+  const { user, signInWithGoogle, logout, loading } = useAuth();
 
   const handleLogin = async () => {
     await signInWithGoogle();
@@ -50,47 +50,53 @@ export default function Home() {
         </Box>
 
         {
-          user ?
-            <Flex
-              flexDirection='column'
-            >
-                <Text>
-                  Login feito com email: {user.email}
-                </Text>
-                <Text
-                  color='teal'
-                  textDecoration='underline'
-                  cursor='pointer'
-                  onClick={logout}
-                >
-                  Sair da conta
-                </Text>
-            </Flex>
-            :
-            <Flex
-              backgroundColor='primaryButton'
-              width='260px'
-              paddingY='4px'
-              borderRadius='100px'
-              cursor='pointer'
-              onClick={handleLogin}
-              alignItems='center'
-              justifyContent='center'
-            >
-              <Image
-                width='35px'
-                src={GoogleLogo}
-                marginRight='4px'
-              />
-              <Text
-                color='primaryText'
-                fontSize='24px'
-                fontWeight='Bold'
-                textAlign='center'
-              >
-                Entrar com Google
-              </Text>
-            </Flex>
+          loading ?
+            <Spinner /> :
+            <>
+              {
+                user ?
+                  <Flex
+                    flexDirection='column'
+                  >
+                    <Text>
+                      Login feito com email: {user.email}
+                    </Text>
+                    <Text
+                      color='teal'
+                      textDecoration='underline'
+                      cursor='pointer'
+                      onClick={logout}
+                    >
+                      Sair da conta
+                    </Text>
+                  </Flex>
+                  :
+                  <Flex
+                    backgroundColor='primaryButton'
+                    width='260px'
+                    paddingY='4px'
+                    borderRadius='100px'
+                    cursor='pointer'
+                    onClick={handleLogin}
+                    alignItems='center'
+                    justifyContent='center'
+                  >
+                    <Image
+                      width='35px'
+                      src={GoogleLogo}
+                      marginRight='4px'
+                    />
+                    <Text
+                      color='primaryText'
+                      fontSize='24px'
+                      fontWeight='Bold'
+                      textAlign='center'
+                    >
+                      Entrar com Google
+                    </Text>
+                  </Flex>
+              }
+            </>
         }
 
       </Flex>

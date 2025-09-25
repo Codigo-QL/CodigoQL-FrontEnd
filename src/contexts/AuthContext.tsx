@@ -5,6 +5,7 @@ import api from '../services/api';
 
 interface AuthContextType {
   user: User | null;
+  loading: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -13,31 +14,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
     try {
+      setLoading(true);
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
 
-      console.log(result);
-      console.log(idToken);
+      const sessionId = localStorage.getItem('sessao_id');
 
-      /* 
-        await api.post('/alunos', {}, {
+      await api.post('/alunos/login', { sessionId }, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
       });
-      */
     } catch (error) {
       console.error('Erro ao fazer login com o Google:', error);
+      setLoading(false);
     }
   };
 
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, signInWithGoogle, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
