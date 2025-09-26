@@ -1,10 +1,41 @@
-import { Box, Flex, Image, Text } from '@chakra-ui/react'
+import { useState } from 'react';
+import { Box, Button, Flex, Image, Spinner, Text } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom';
-import Logo from '../assets/Logo.svg'
+import { useAuth } from '../contexts/AuthContext';
+import Logo from '../assets/Logo.svg';
+import GoogleLogo from '../assets/Google.png';
+import { TCLE } from '../components/TCLEDialog';
+import { AvisoProgressoLocalDialog } from '../components/AvisoProgressoLocalDialog';
 
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user, signInWithGoogle, logout, loading } = useAuth();
+  const [TCLEOpen, setTCLEOpen] = useState(false);
+  const [avisoOpen, setAvisoOpen] = useState(false);
+
+  const handleLogin = async () => {
+    setTCLEOpen(false);
+    await signInWithGoogle();
+    navigate('/capitulos');
+  }
+
+  const handleWarning = () => {
+    setAvisoOpen(false);
+    setTCLEOpen(true);
+  }
+
+  const handleInit = () => {
+    navigate('/capitulos')
+  }
+
+  const verifyUser = () => {
+    if (user) {
+      handleInit();
+    } else {
+      setAvisoOpen(true)
+    }
+  }
 
   return (
     <Box
@@ -16,30 +47,91 @@ export default function Home() {
         justifyContent='center'
         alignItems='center'
       >
-        <Image 
-          src={Logo} 
-          width={{base: '360px', md: '500px'}}
+        <Image
+          src={Logo}
+          width={{ base: '360px', md: '500px' }}
           marginBottom='32px'
         />
 
-        <Box
+        <Button
           backgroundColor='primaryButton'
-          width={{base: '120px', md: '190px'}}
-          paddingY={{base: '4px', md: '0'}}
-          borderRadius='8px'
+          width='140px'
+          paddingY='4px'
+          borderRadius='100px'
           cursor='pointer'
-          onClick={() => navigate('/capitulos')}
-          >
+          onClick={verifyUser}
+          marginBottom='8px'
+        >
           <Text
             color='primaryText'
-            fontSize={{ base: '24px', md: '40px'}}
+            fontSize='24px'
             fontWeight='Bold'
             textAlign='center'
           >
-            Iniciar
+            Entrar
           </Text>
-        </Box>
+        </Button>
+
+        {
+          loading ?
+            <Spinner /> :
+            <>
+              {
+                user ?
+                  <Flex
+                    flexDirection='column'
+                  >
+                    <Text>
+                      Login feito com email: {user.email}
+                    </Text>
+                    <Text
+                      color='teal'
+                      textDecoration='underline'
+                      cursor='pointer'
+                      onClick={logout}
+                    >
+                      Sair da conta
+                    </Text>
+                  </Flex>
+                  :
+                  <Button
+                    backgroundColor='primaryButton'
+                    width='260px'
+                    paddingY='4px'
+                    borderRadius='100px'
+                    cursor='pointer'
+                    onClick={() => setTCLEOpen(true)}
+                    alignItems='center'
+                    justifyContent='center'
+                  >
+                    <Image
+                      width='35px'
+                      src={GoogleLogo}
+                      marginRight='4px'
+                    />
+                    <Text
+                      color='primaryText'
+                      fontSize='24px'
+                      fontWeight='Bold'
+                      textAlign='center'
+                    >
+                      Entrar com Google
+                    </Text>
+                  </Button>
+              }
+            </>
+        }
+
       </Flex>
+      <TCLE 
+        isOpen={TCLEOpen}
+        onClick={handleLogin}
+      />
+      <AvisoProgressoLocalDialog 
+        isOpen={avisoOpen}
+        onClose={handleWarning}
+        onConfirm={handleInit}
+      />
     </Box>
   )
 }

@@ -1,14 +1,20 @@
-import { Flex, Image, Spinner, Text } from "@chakra-ui/react";
+import { Box, Flex, Icon, Image, Spinner, Text } from "@chakra-ui/react";
 import LogoHeader from "../assets/LogoHeader.svg";
 import { CapituloCard } from "../components/CapituloCard";
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import { MdArrowBack } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 export interface Nivel {
     id: number;
     personagem: {
         nome: string;
     };
+    _count?: {
+        submissao: number;
+    }
 }
 
 export interface Capitulo {
@@ -20,22 +26,28 @@ export interface Capitulo {
 
 export default function Capitulos() {
     const [capitulos, setCapitulos] = useState<Capitulo[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [contentLoading, setContentLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { user, loading } = useAuth();
+
+    const navigate = useNavigate();
 
     useEffect(() => {
-        api.get('/capitulos')
-            .then(response => {
+        const fetchCapitulos = async () => {
+            try {
+                const response = await api.get('/capitulos');
                 setCapitulos(response.data);
-            })
-            .catch(err => {
-                console.error("Erro ao buscar capítulos:", err);
+            } catch (error) {
+                console.error("Erro ao buscar capítulos:", error);
                 setError("Não foi possível carregar os capítulos.");
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, []);
+            } finally {
+                setContentLoading(false);
+            }
+        };
+        if (!loading) {
+            fetchCapitulos();
+        }
+    }, [user]);
 
     return (
         <Flex
@@ -43,6 +55,21 @@ export default function Capitulos() {
             flexDirection='column'
 
         >
+            <Box
+                aria-label="Voltar"
+                position="absolute"
+                left="0"
+                marginLeft={{base: '16px', md: "32px"}}
+                marginTop={{base: '50px', md: "32px"}}
+                cursor="pointer"
+                onClick={() => navigate("/")}
+            >
+                <Icon
+                    size='2xl'
+                >
+                    <MdArrowBack />
+                </Icon>
+            </Box>
             <Flex
                 justifyContent='center'
             >
@@ -59,7 +86,7 @@ export default function Capitulos() {
                 alignItems='center'
                 flex={1}
                 minH={0}
-                >
+            >
                 <Text
                     color='primaryButton'
                     fontSize={{ base: '20px', md: '25px' }}
@@ -81,9 +108,9 @@ export default function Capitulos() {
                     p={2}
                 >
 
-                    {loading && <Spinner size="xl" />}
+                    {contentLoading && <Spinner size="xl" />}
                     {error && <Text color="red.500">{error}</Text>}
-                    {!loading && !error && capitulos.map(capitulo => (
+                    {!contentLoading && !error && capitulos.map(capitulo => (
                         <CapituloCard key={capitulo.codigo} capitulo={capitulo} />
                     ))}
 
