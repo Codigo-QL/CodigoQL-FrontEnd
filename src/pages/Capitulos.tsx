@@ -47,7 +47,7 @@ export default function Capitulos() {
         if (!loading) {
             fetchCapitulos();
         }
-    }, [user]);
+    }, [user, loading]);
 
     return (
         <Flex
