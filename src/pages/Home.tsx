@@ -1,17 +1,40 @@
-import { Box, Flex, Image, Spinner, Text } from '@chakra-ui/react'
+import { useState } from 'react';
+import { Box, Button, Flex, Image, Spinner, Text } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../assets/Logo.svg';
 import GoogleLogo from '../assets/Google.png';
+import { TCLE } from '../components/TCLEDialog';
+import { AvisoProgressoLocalDialog } from '../components/AvisoProgressoLocalDialog';
 
 
 export default function Home() {
   const navigate = useNavigate();
   const { user, signInWithGoogle, logout, loading } = useAuth();
+  const [TCLEOpen, setTCLEOpen] = useState(false);
+  const [avisoOpen, setAvisoOpen] = useState(false);
 
   const handleLogin = async () => {
+    setTCLEOpen(false);
     await signInWithGoogle();
     navigate('/capitulos');
+  }
+
+  const handleWarning = () => {
+    setAvisoOpen(false);
+    setTCLEOpen(true);
+  }
+
+  const handleInit = () => {
+    navigate('/capitulos')
+  }
+
+  const verifyUser = () => {
+    if (user) {
+      handleInit();
+    } else {
+      setAvisoOpen(true)
+    }
   }
 
   return (
@@ -30,13 +53,13 @@ export default function Home() {
           marginBottom='32px'
         />
 
-        <Box
+        <Button
           backgroundColor='primaryButton'
           width='140px'
           paddingY='4px'
           borderRadius='100px'
           cursor='pointer'
-          onClick={() => navigate('/capitulos')}
+          onClick={verifyUser}
           marginBottom='8px'
         >
           <Text
@@ -47,7 +70,7 @@ export default function Home() {
           >
             Entrar
           </Text>
-        </Box>
+        </Button>
 
         {
           loading ?
@@ -71,13 +94,13 @@ export default function Home() {
                     </Text>
                   </Flex>
                   :
-                  <Flex
+                  <Button
                     backgroundColor='primaryButton'
                     width='260px'
                     paddingY='4px'
                     borderRadius='100px'
                     cursor='pointer'
-                    onClick={handleLogin}
+                    onClick={() => setTCLEOpen(true)}
                     alignItems='center'
                     justifyContent='center'
                   >
@@ -94,12 +117,21 @@ export default function Home() {
                     >
                       Entrar com Google
                     </Text>
-                  </Flex>
+                  </Button>
               }
             </>
         }
 
       </Flex>
+      <TCLE 
+        isOpen={TCLEOpen}
+        onClick={handleLogin}
+      />
+      <AvisoProgressoLocalDialog 
+        isOpen={avisoOpen}
+        onClose={handleWarning}
+        onConfirm={handleInit}
+      />
     </Box>
   )
 }

@@ -1,9 +1,11 @@
-import { Flex, Image, Spinner, Text } from "@chakra-ui/react";
+import { Box, Flex, Icon, Image, Spinner, Text } from "@chakra-ui/react";
 import LogoHeader from "../assets/LogoHeader.svg";
 import { CapituloCard } from "../components/CapituloCard";
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { MdArrowBack } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 export interface Nivel {
     id: number;
@@ -28,6 +30,8 @@ export default function Capitulos() {
     const [error, setError] = useState<string | null>(null);
     const { user, loading } = useAuth();
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchCapitulos = async () => {
             try {
@@ -51,6 +55,21 @@ export default function Capitulos() {
             flexDirection='column'
 
         >
+            <Box
+                aria-label="Voltar"
+                position="absolute"
+                left="0"
+                marginLeft={{base: '16px', md: "32px"}}
+                marginTop={{base: '50px', md: "32px"}}
+                cursor="pointer"
+                onClick={() => navigate("/")}
+            >
+                <Icon
+                    size='2xl'
+                >
+                    <MdArrowBack />
+                </Icon>
+            </Box>
             <Flex
                 justifyContent='center'
             >

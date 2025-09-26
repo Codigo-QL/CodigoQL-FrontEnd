@@ -8,7 +8,6 @@ import api from '../services/api';
 import ReactMarkdown from 'react-markdown';
 import hljs, { ensureSqlLanguageIsRegistered } from '../services/highlight';
 import 'highlight.js/styles/github-dark.css';
-import { MatriculaDialog } from '../components/MatriculaDialog';
 import { SqlEditor } from '../components/SqlEditor';
 import { ResultadoCard } from '../components/ResultadoCard';
 
@@ -92,7 +91,6 @@ export default function Nivel() {
   const [activeCaseTab, setActiveCaseTab] = useState('caso');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationResult, setValidationResult] = useState<{ correct: boolean; feedback: string } | null>(null);
-  const [isMatriculaDialogOpen, setMatriculaDialogOpen] = useState(false);
 
   const imageUrl = nivel?.personagem?.nome
     ? `${import.meta.env.VITE_API_BASE_URL}/personagens/${nivel.personagem.nome}/imagem`
@@ -162,18 +160,6 @@ export default function Nivel() {
       setIsSubmitting(false);
     }
   };
-
-  const handleMatriculaSubmit = (matricula: string) => {
-    localStorage.setItem('matricula', matricula);
-    setMatriculaDialogOpen(false);
-  };
-
-  useEffect(() => {
-    const matricula = localStorage.getItem('matricula');
-    if (!matricula) {
-      setMatriculaDialogOpen(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (id) {
@@ -647,11 +633,6 @@ export default function Nivel() {
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
-
-      <MatriculaDialog
-        isOpen={isMatriculaDialogOpen}
-        onSubmit={handleMatriculaSubmit}
-      />
     </Box>
   )
 }
