@@ -1,4 +1,5 @@
 import { Box, Flex, Icon, Image, Spinner, Text } from "@chakra-ui/react";
+import { Tooltip } from "../components/ui/tooltip"
 import LogoHeader from "../assets/LogoHeader.svg";
 import { CapituloCard } from "../components/CapituloCard";
 import { useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { MdArrowBack } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { FaRegStar } from "react-icons/fa";
 
 export interface Nivel {
     id: number;
@@ -28,6 +30,7 @@ export default function Capitulos() {
     const [capitulos, setCapitulos] = useState<Capitulo[]>([]);
     const [contentLoading, setContentLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showReview, setShowReview] = useState(false);
     const { user, loading } = useAuth();
 
     const navigate = useNavigate();
@@ -37,6 +40,28 @@ export default function Capitulos() {
             try {
                 const response = await api.get('/capitulos');
                 setCapitulos(response.data);
+
+                let niveisCompletos = 0;
+
+                if (user) {
+                    response.data.forEach((capitulo: Capitulo) => {
+                        capitulo.nivel.forEach(nivel => {
+                            if (nivel._count && nivel._count.submissao > 0) {
+                                niveisCompletos++;
+                            }
+                        });
+                    });
+                } else {
+                    const progressoLocal = localStorage.getItem('completedLevels');
+                    if (progressoLocal) {
+                        const niveisConcluidosIds: number[] = JSON.parse(progressoLocal);
+                        niveisCompletos = niveisConcluidosIds.length;
+                    }
+                }
+
+                if (niveisCompletos >= 10) {
+                    setShowReview(true);
+                }
             } catch (error) {
                 console.error("Erro ao buscar capítulos:", error);
                 setError("Não foi possível carregar os capítulos.");
@@ -55,12 +80,40 @@ export default function Capitulos() {
             flexDirection='column'
 
         >
+            {
+                showReview && <Tooltip
+                    showArrow
+                    content="Clique aqui para avaliar a plataforma!"
+                    positioning={{ placement: "bottom" }}
+                    openDelay={0}
+                    defaultOpen={true}
+                >
+                    <Box
+                        aria-label="Avaliar Plataforma"
+                        position="absolute"
+                        right="0"
+                        marginRight={{ base: '16px', md: "32px" }}
+                        marginTop={{ base: '35px', md: "32px" }}
+                        cursor="pointer"
+                        onClick={() => window.open('https://forms.gle/7nfpVmPDnDaQpBw69', '_blank')}
+                        backgroundColor="greenHighlight"
+                        padding="8px"
+                        borderRadius="100px"
+                    >
+                        <Icon
+                            size='2xl'
+                        >
+                            <FaRegStar />
+                        </Icon>
+                    </Box>
+                </Tooltip>
+            }
             <Box
                 aria-label="Voltar"
                 position="absolute"
                 left="0"
-                marginLeft={{base: '16px', md: "32px"}}
-                marginTop={{base: '50px', md: "32px"}}
+                marginLeft={{ base: '16px', md: "32px" }}
+                marginTop={{ base: '50px', md: "32px" }}
                 cursor="pointer"
                 onClick={() => navigate("/")}
             >
