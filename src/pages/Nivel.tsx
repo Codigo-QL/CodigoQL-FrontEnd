@@ -444,11 +444,10 @@ export default function Nivel() {
             </Flex>
             <Flex
               width="100%"
-              height={{ base: '80px', md: '120px' }}
+              height={{ base: '280px', md: '200px' }}
               borderWidth='4px'
               borderRadius='4px 0px 4px 4px'
               borderColor='primaryButton'
-              overflow='auto'
             >
               {isDbLoading ? (
                 <Flex direction="column" align="center" justify="center" height="100%">
@@ -465,7 +464,7 @@ export default function Nivel() {
 
           <Flex
             flexDirection='column'
-            height={{base: '100%', md: '50%'}}
+            height={{base: '100%', md: '40%'}}
           >
             <Flex
               alignSelf='flex-end'
@@ -487,7 +486,7 @@ export default function Nivel() {
             </Flex>
             <Flex
               width="100%"
-              height='100%'
+              height={{base: '250px', md: '100%'}}
               borderWidth='4px'
               borderRadius='4px 0px 4px 4px'
               borderColor='primaryButton'

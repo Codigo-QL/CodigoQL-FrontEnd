@@ -22,7 +22,7 @@ const SqlEditorComponent = ({ code, onCodeChange }: SqlEditorProps) => {
         fontFamily: '"Fira code", "Fira Mono", monospace',
         fontSize: 16,
         minHeight: '100%',
-        width: '100%'
+        width: '100%',
       }}
       className="hljs"
     />
