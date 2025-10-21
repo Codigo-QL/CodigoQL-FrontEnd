@@ -445,6 +445,7 @@ export default function Nivel() {
             <Flex
               width="100%"
               height={{ base: '280px', md: '200px' }}
+              overflow='auto'
               borderWidth='4px'
               borderRadius='4px 0px 4px 4px'
               borderColor='primaryButton'
@@ -457,7 +458,11 @@ export default function Nivel() {
               ) : dbError ? (
                 <Text p={4} color="red.500">{dbError}</Text>
               ) : (
-                <SqlEditor code={code} onCodeChange={handleCodeChange} />
+                <Box
+                  width='100%'
+                >
+                  <SqlEditor code={code} onCodeChange={handleCodeChange} />
+                </Box>
               )}
             </Flex>
           </Flex>
